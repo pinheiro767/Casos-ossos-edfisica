@@ -524,9 +524,11 @@ body{
     </div>
     <h1>Anatomia Clínica Interativa</h1>
     <p>Aplicativo imersivo com 30 casos clínicos descritivos voltados para Educação Física. Cada caso articula ossos, lesões, termos de comparação e relação, divisão do corpo, posição anatômica, planos e eixos. O aluno registra a resposta, envia foto da prática e acompanha o progresso. A resposta do professor fica oculta por senha.</p>
-    <div class="hero-actions"><button id="installBtn" class="btn" style="display: inline-flex; align-items: center; gap: 8px;">⬇️ Baixar app</button> <button class="btn secondary" type="button" onclick="preparePrint()">📄 Exportar PDF</button> <button class="btn ghost" type="button" onclick="scrollToCases()">🎯 Ir para os casos</button>
+    <div class="hero-actions">
+     <button id="installBtn" class="btn" style="display: inline-flex; align-items: center; gap: 8px;">⬇️ Baixar app</button> <button class="btn secondary" type="button" onclick="preparePrint()">📄 Exportar PDF</button> <button class="btn ghost" type="button" onclick="scrollToCases()">🎯 Ir para os casos</button>
     </div>
-    <div class="badges"><span class="badge">30 casos completos</span> <span class="badge">Senha professor: 🗝</span> <span class="badge">Salvamento local</span> <span class="badge">Fotos por caso</span> <span class="badge">Instalável no celular</span>
+    <div class="badges">
+     <span class="badge">30 casos completos</span> <span class="badge">Senha professor: 🗝</span> <span class="badge">Salvamento local</span> <span class="badge">Fotos por caso</span> <span class="badge">Instalável no celular</span>
     </div>
    </section>
    <section class="dashboard">
@@ -547,8 +549,11 @@ body{
      <p id="status-text">Conectado • Dados salvos localmente</p>
     </div>
    </section>
-   <section class="toolbar"><input id="search" class="field" type="search" placeholder="Pesquisar casos..."> <select id="category"> <option value="todos">Todas as categorias</option> <option value="membro superior">Membro superior</option> <option value="membro inferior">Membro inferior</option> <option value="axial">Axial / tronco</option> <option value="termos">Termos anatômicos</option> <option value="posicao">Posição anatômica</option> <option value="planos">Planos e eixos</option> <option value="integracao">Integração clínica</option> </select> <button class="btn secondary" type="button" onclick="clearAllNotes()">Limpar anotações</button>
+   <section class="toolbar">
+    <input id="search" class="field" type="search" placeholder="Pesquisar casos..."> <select id="category"> <option value="todos">Todas as categorias</option> <option value="membro superior">Membro superior</option> <option value="membro inferior">Membro inferior</option> <option value="axial">Axial / tronco</option> <option value="termos">Termos anatômicos</option> <option value="posicao">Posição anatômica</option> <option value="planos">Planos e eixos</option> <option value="integracao">Integração clínica</option> </select> <button class="btn secondary" type="button" onclick="clearAllNotes()">Limpar anotações</button>
    </section>
+   <div class="tabs-nav" style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap"><button class="tab-btn active" onclick="showBlock(0)" style="padding:10px 14px;border-radius:12px;border:none;background:rgba(110,168,255,.2);border:1px solid rgba(110,168,255,.3);color:var(--text);cursor:pointer;font-weight:600;font-size:.9rem;transition:all .2s ease" data-block="0">📌 Casos 1-7</button> <button class="tab-btn" onclick="showBlock(1)" style="padding:10px 14px;border-radius:12px;border:none;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--text);cursor:pointer;font-weight:600;font-size:.9rem;transition:all .2s ease" data-block="1">📌 Casos 8-15</button> <button class="tab-btn" onclick="showBlock(2)" style="padding:10px 14px;border-radius:12px;border:none;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--text);cursor:pointer;font-weight:600;font-size:.9rem;transition:all .2s ease" data-block="2">📌 Casos 16-23</button> <button class="tab-btn" onclick="showBlock(3)" style="padding:10px 14px;border-radius:12px;border:none;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--text);cursor:pointer;font-weight:600;font-size:.9rem;transition:all .2s ease" data-block="3">📌 Casos 24-30</button>
+   </div>
    <main id="cases" class="cases-container"></main>
    <footer class="footer">
     Responsável tecnológico: Cláudia Pinheiro • Universidade Estadual de Maringá
@@ -1037,8 +1042,9 @@ body{
     function createCard(caso, index){
       const tags = caso.tags.map(t => `<span class="card-tag">${t}</span>`).join('');
       const searchText = `${caso.title} ${caso.description} ${caso.question} ${caso.answer} ${caso.meta} ${caso.tags.join(' ')}`.toLowerCase();
+      const blockIndex = Math.floor(index / 7);
       return `
-        <article class="card" data-category="${caso.category}" data-search="${searchText}">
+        <article class="card" data-category="${caso.category}" data-search="${searchText}" data-block="${blockIndex}">
           <div class="card-header">
             <div>
               <div class="card-number">Caso ${index + 1}</div>
@@ -1304,7 +1310,24 @@ function updateProgress(){
   }
 }
 
+function showBlock(blockNum){
+  document.querySelectorAll('.card').forEach(card => {
+    const cardBlock = parseInt(card.dataset.block);
+    card.style.display = cardBlock === blockNum ? 'block' : 'none';
+  });
+  
+  document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+    if(i === blockNum){
+      btn.style.background = 'rgba(110,168,255,.2)';
+      btn.style.borderColor = 'rgba(110,168,255,.3)';
+    } else {
+      btn.style.background = 'rgba(255,255,255,.06)';
+      btn.style.borderColor = 'rgba(255,255,255,.1)';
+    }
+  });
+}
+
 renderCases();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e4734a6368002fc',t:'MTc3NDg3NDY2Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e477757826702fc',t:'MTc3NDg3NzM5Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
  </html>
