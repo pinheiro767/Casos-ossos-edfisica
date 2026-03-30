@@ -549,9 +549,6 @@ body{
    </section>
    <section class="toolbar"><input id="search" class="field" type="search" placeholder="Pesquisar casos..."> <select id="category"> <option value="todos">Todas as categorias</option> <option value="membro superior">Membro superior</option> <option value="membro inferior">Membro inferior</option> <option value="axial">Axial / tronco</option> <option value="termos">Termos anatômicos</option> <option value="posicao">Posição anatômica</option> <option value="planos">Planos e eixos</option> <option value="integracao">Integração clínica</option> </select> <button class="btn secondary" type="button" onclick="clearAllNotes()">Limpar anotações</button>
    </section>
-   <div class="tabs-nav" style="display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap">
-    <button class="tab-btn active" onclick="showBlock(0)" style="padding:10px 14px;border-radius:12px;border:none;background:rgba(110,168,255,.2);border:1px solid rgba(110,168,255,.3);color:var(--text);cursor:pointer;font-weight:600;font-size:.9rem;transition:all .2s ease" data-block="0">📌 Casos 1-7</button> <button class="tab-btn" onclick="showBlock(1)" style="padding:10px 14px;border-radius:12px;border:none;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--text);cursor:pointer;font-weight:600;font-size:.9rem;transition:all .2s ease" data-block="1">📌 Casos 8-15</button> <button class="tab-btn" onclick="showBlock(2)" style="padding:10px 14px;border-radius:12px;border:none;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--text);cursor:pointer;font-weight:600;font-size:.9rem;transition:all .2s ease" data-block="2">📌 Casos 16-23</button> <button class="tab-btn" onclick="showBlock(3)" style="padding:10px 14px;border-radius:12px;border:none;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:var(--text);cursor:pointer;font-weight:600;font-size:.9rem;transition:all .2s ease" data-block="3">📌 Casos 24-30</button>
-   </div>
    <main id="cases" class="cases-container"></main>
    <footer class="footer">
     Responsável tecnológico: Cláudia Pinheiro • Universidade Estadual de Maringá
@@ -1040,9 +1037,8 @@ body{
     function createCard(caso, index){
       const tags = caso.tags.map(t => `<span class="card-tag">${t}</span>`).join('');
       const searchText = `${caso.title} ${caso.description} ${caso.question} ${caso.answer} ${caso.meta} ${caso.tags.join(' ')}`.toLowerCase();
-      const blockIndex = Math.floor(index / 7);
       return `
-        <article class="card" data-category="${caso.category}" data-search="${searchText}" data-block="${blockIndex}">
+        <article class="card" data-category="${caso.category}" data-search="${searchText}">
           <div class="card-header">
             <div>
               <div class="card-number">Caso ${index + 1}</div>
@@ -1254,36 +1250,13 @@ function clearAllNotes(){
 function previewImage(event, index){
   const file = event.target.files[0];
   if(!file) return;
-
-  compressImage(file, data => {
-    const img = document.getElementById(`img-${index}`);
-    img.src = data;
-    img.style.display = 'block';
-    localStorage.setItem(`img-${index}`, data);
-  });
-}
-
-function compressImage(file, callback){
-  const img = new Image();
   const reader = new FileReader();
-
-  reader.onload = e => img.src = e.target.result;
-
-  img.onload = () => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-
-    const maxWidth = 600;
-    const scale = maxWidth / img.width;
-
-    canvas.width = maxWidth;
-    canvas.height = img.height * scale;
-
-    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-    callback(canvas.toDataURL('image/jpeg', 0.7));
+  reader.onload = function(e){
+    const img = document.getElementById(`img-${index}`);
+    img.src = e.target.result;
+    img.style.display = 'block';
+    localStorage.setItem(`img-${index}`, e.target.result);
   };
-
   reader.readAsDataURL(file);
 }
 
@@ -1307,48 +1280,31 @@ function updateProgress(){
   
   document.getElementById('doneCount').textContent = done;
   document.getElementById('progressBar').style.width = (done / total * 100) + '%';
-}
 
-function filterCases(){
   const searchInput = document.getElementById('search');
   const categorySelect = document.getElementById('category');
 
-  const query = searchInput.value.toLowerCase();
-  const category = categorySelect.value;
+  function filterCases() {
+    const query = searchInput.value.toLowerCase();
+    const category = categorySelect.value;
+    
+    document.querySelectorAll('.card').forEach(card => {
+      const search = card.dataset.search;
+      const cardCategory = card.dataset.category;
+      const matchesSearch = search.includes(query);
+      const matchesCategory = category === 'todos' || cardCategory === category;
+      card.style.display = matchesSearch && matchesCategory ? 'block' : 'none';
+    });
+  }
 
-  const activeBtn = document.querySelector('.tab-btn[style*="110,168,255"]');
-  const activeBlock = activeBtn ? activeBtn.dataset.block : "0";
-
-  document.querySelectorAll('.card').forEach(card => {
-    const search = card.dataset.search;
-    const cardCategory = card.dataset.category;
-    const block = card.dataset.block;
-
-    const matchesSearch = search.includes(query);
-    const matchesCategory = category === 'todos' || cardCategory === category;
-    const matchesBlock = block === activeBlock;
-
-    card.style.display = matchesSearch && matchesCategory && matchesBlock ? 'block' : 'none';
-  });
-}
-
-function showBlock(blockNum){
-  document.querySelectorAll('.tab-btn').forEach((btn, i) => {
-    if(i === blockNum){
-      btn.style.background = 'rgba(110,168,255,.2)';
-      btn.style.borderColor = 'rgba(110,168,255,.3)';
-    } else {
-      btn.style.background = 'rgba(255,255,255,.06)';
-      btn.style.borderColor = 'rgba(255,255,255,.1)';
-    }
-  });
-
-  filterCases();
+  if (!searchInput.dataset.listener) {
+    searchInput.addEventListener('input', filterCases);
+    categorySelect.addEventListener('change', filterCases);
+    searchInput.dataset.listener = 'true';
+  }
 }
 
 renderCases();
-document.getElementById('search').addEventListener('input', filterCases);
-document.getElementById('category').addEventListener('change', filterCases);
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e4789e7c36db559',t:'MTc3NDg3ODE1OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
- </html>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e4734a6368002fc',t:'MTc3NDg3NDY2Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
