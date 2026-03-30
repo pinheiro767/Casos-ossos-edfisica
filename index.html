@@ -1,0 +1,1297 @@
+<!doctype html>
+<html lang="pt-BR">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=5.0, user-scalable=yes">
+  <title>Anatomia Clínica</title>
+  <meta name="theme-color" content="#0b1020">
+  <meta name="description" content="App PWA imersivo com 30 casos clínicos descritivos de anatomia, com respostas ocultas por senha, anotações, fotos, progresso e exportação em PDF.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Anatomia Clínica">
+  <link rel="manifest" href="manifest.json">
+  <style>
+    :root{
+      --bg:#050816;
+      --bg2:#0b1020;
+      --bg3:#121a33;
+      --card:rgba(18,26,51,.78);
+      --card-2:rgba(12,19,45,.9);
+      --line:rgba(255,255,255,.10);
+      --text:#eef4ff;
+      --muted:#aab7d9;
+      --accent:#6ea8ff;
+      --accent2:#9a7cff;
+      --accent3:#56e0c6;
+      --warn:#ffd580;
+      --danger:#ff8f98;
+      --ok:#95f0cb;
+      --shadow:0 18px 50px rgba(0,0,0,.28);
+      --radius:24px;
+      --radius-sm:16px;
+      --blur:18px;
+    }*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-user-select:none;user-select:none}
+body{
+  margin:0;
+  font-family:Inter,Segoe UI,Arial,sans-serif;
+  color:var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(110,168,255,.18), transparent 24%),
+    radial-gradient(circle at top right, rgba(154,124,255,.16), transparent 28%),
+    linear-gradient(180deg, #030611 0%, #08101f 38%, #0b1020 100%);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+}
+
+.orb,.orb2{
+  position:fixed;
+  width:360px;
+  height:360px;
+  border-radius:50%;
+  filter:blur(80px);
+  pointer-events:none;
+  z-index:0;
+}
+.orb{top:-80px;left:-70px;background:rgba(110,168,255,.18)}
+.orb2{right:-80px;top:180px;background:rgba(154,124,255,.16)}
+
+.app{
+  position:relative;
+  z-index:1;
+  max-width:1180px;
+  margin:0 auto;
+  padding:18px 16px 40px;
+}
+
+.hero{
+  position:relative;
+  overflow:hidden;
+  padding:24px;
+  border-radius:32px;
+  background:linear-gradient(135deg, rgba(110,168,255,.18), rgba(154,124,255,.18));
+  border:1px solid var(--line);
+  box-shadow:var(--shadow);
+  backdrop-filter:blur(var(--blur));
+  margin-bottom:18px;
+}
+.hero::after{
+  content:"";
+  position:absolute;
+  inset:auto -40px -80px auto;
+  width:220px;
+  height:220px;
+  background:radial-gradient(circle, rgba(86,224,198,.22), transparent 70%);
+  filter:blur(10px);
+  pointer-events:none;
+}
+.eyebrow{
+  display:inline-flex;
+  gap:8px;
+  align-items:center;
+  padding:8px 12px;
+  border-radius:999px;
+  background:rgba(255,255,255,.07);
+  border:1px solid var(--line);
+  font-size:.86rem;
+  margin-bottom:12px;
+}
+.hero h1{
+  margin:0;
+  font-size:clamp(2rem,4vw,3.2rem);
+  line-height:1.05;
+  max-width:760px;
+}
+.hero p{
+  margin:12px 0 0;
+  color:var(--muted);
+  max-width:860px;
+  font-size:1rem;
+  line-height:1.6;
+}
+.hero-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:18px;
+}
+.btn{
+  appearance:none;
+  border:none;
+  border-radius:16px;
+  padding:12px 16px;
+  cursor:pointer;
+  font-weight:700;
+  color:white;
+  background:linear-gradient(135deg, var(--accent), var(--accent2));
+  box-shadow:var(--shadow);
+  -webkit-user-select:none;
+  user-select:none;
+  touch-action:manipulation;
+  transition:transform .15s ease, box-shadow .15s ease;
+  min-height:44px;
+}
+.btn:active{
+  transform:scale(0.98);
+  box-shadow:0 8px 24px rgba(0,0,0,.2);
+}
+.btn.secondary{
+  background:rgba(255,255,255,.06);
+  border:1px solid var(--line);
+  box-shadow:none;
+  color:var(--text);
+}
+.btn.ghost{
+  background:rgba(86,224,198,.12);
+  border:1px solid rgba(86,224,198,.2);
+  box-shadow:none;
+  color:#dffef8;
+}
+.badges{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.badge{
+  padding:8px 12px;
+  border-radius:999px;
+  background:rgba(255,255,255,.07);
+  border:1px solid var(--line);
+  font-size:.88rem;
+  color:#e4ecff;
+}
+
+.dashboard{
+  display:grid;
+  grid-template-columns:1.5fr 1fr 1fr;
+  gap:14px;
+  margin-bottom:18px;
+}
+.panel{
+  padding:18px;
+  border-radius:24px;
+  background:rgba(255,255,255,.045);
+  border:1px solid var(--line);
+  box-shadow:var(--shadow);
+  backdrop-filter:blur(12px);
+}
+.panel h2,.panel h3{margin:0 0 10px;font-size:clamp(1rem,3vw,1.2rem)}
+.panel p{margin:6px 0;color:var(--muted);font-size:.95rem}
+.metric{font-size:2rem;font-weight:800;color:var(--ok);line-height:1}
+.progress-wrap{
+  margin-top:14px;
+  height:12px;
+  border-radius:999px;
+  background:#101833;
+  overflow:hidden;
+  border:1px solid var(--line);
+}
+.progress-bar{
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+  transition:width .3s ease;
+}
+.toolbar{
+  display:grid;
+  grid-template-columns:1.4fr .9fr auto auto;
+  gap:12px;
+  margin-bottom:18px;
+}
+.field, select, textarea, input[type="text"], input[type="search"]{
+  width:100%;
+  border:none;
+  outline:none;
+  border-radius:16px;
+  background:#0c1530;
+  color:var(--text);
+  padding:14px 15px;
+  border:1px solid rgba(255,255,255,.08);
+  font:inherit;
+  -webkit-appearance:none;
+  appearance:none;
+  font-size:16px;
+}
+.toolbar .field, .toolbar select{height:52px;min-height:44px}
+.cases-container{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(360px,1fr));
+  gap:16px;
+}
+.card{
+  display:flex;
+  flex-direction:column;
+  position:relative;
+  padding:22px;
+  border-radius:20px;
+  background:rgba(255,255,255,.045);
+  border:1px solid var(--line);
+  box-shadow:var(--shadow);
+  backdrop-filter:blur(10px);
+  overflow:hidden;
+  transition:all .25s ease;
+}
+.card:hover{
+  transform:translateY(-3px);
+  border-color:rgba(110,168,255,.28);
+  background:rgba(255,255,255,.07);
+}
+.card::before{
+  content:"";
+  position:absolute;
+  inset:0 0 auto 0;
+  height:3px;
+  background:linear-gradient(90deg, var(--accent), var(--accent2), var(--accent3));
+  opacity:.9;
+}
+.card-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  margin-bottom:14px;
+  gap:12px;
+}
+.card-number{
+  color:var(--warn);
+  font-size:.8rem;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+.card-title{
+  margin:0 0 0 0;
+  font-size:1.08rem;
+  line-height:1.3;
+  font-weight:600;
+  color:var(--text);
+  flex:1;
+}
+.card-tags{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+}
+.card-tag{
+  padding:4px 8px;
+  border-radius:8px;
+  font-size:.7rem;
+  border:1px solid rgba(110,168,255,.2);
+  background:rgba(110,168,255,.08);
+  color:#d4e4ff;
+  white-space:nowrap;
+}
+.card-section{
+  margin-bottom:12px;
+}
+.card-section:last-of-type{
+  margin-bottom:0;
+}
+.card-label{
+  display:block;
+  font-size:.75rem;
+  color:#aab7d9;
+  margin-bottom:6px;
+  font-weight:600;
+  text-transform:uppercase;
+  letter-spacing:.03em;
+}
+.card-text{
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.06);
+  background:rgba(255,255,255,.02);
+  color:var(--muted);
+  line-height:1.5;
+  font-size:.9rem;
+}
+.card-text.question{
+  background:rgba(110,168,255,.08);
+  border-color:rgba(110,168,255,.15);
+  color:#d4e4ff;
+}
+.card-text.answer{
+  background:rgba(86,224,198,.08);
+  border-color:rgba(86,224,198,.15);
+  color:#d4f0e8;
+}
+.card-text.meta{
+  background:rgba(255,255,255,.02);
+  border-color:rgba(255,255,255,.06);
+}
+.card-textarea{
+  width:100%;
+  min-height:90px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(110,168,255,.15);
+  background:rgba(110,168,255,.05);
+  color:var(--text);
+  font-family:inherit;
+  font-size:.9rem;
+  resize:vertical;
+  line-height:1.5;
+}
+.card-textarea::placeholder{
+  color:rgba(255,255,255,.3);
+}
+.card-textarea:focus{
+  outline:none;
+  border-color:rgba(110,168,255,.3);
+  background:rgba(110,168,255,.08);
+}
+.card-upload{
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px dashed rgba(255,255,255,.15);
+  background:rgba(255,255,255,.02);
+  text-align:center;
+}
+.card-upload input{
+  width:100%;
+  cursor:pointer;
+}
+.card-image{
+  display:none;
+  width:100%;
+  border-radius:12px;
+  margin-top:8px;
+  border:1px solid rgba(255,255,255,.1);
+  object-fit:cover;
+  max-height:200px;
+}
+.card-actions{
+  display:flex;
+  gap:8px;
+  margin-top:12px;
+}
+.card-actions .btn{
+  flex:1;
+  font-size:.85rem;
+  padding:10px 12px;
+  min-height:auto;
+  height:auto;
+  border-radius:12px;
+}
+.card-actions .btn.secondary{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.1);
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+  gap:16px;
+}
+.hidden{display:none !important}
+.footer{
+  margin-top:24px;
+  padding:18px 0 6px;
+  text-align:center;
+  color:var(--muted);
+  border-top:1px solid rgba(255,255,255,.08);
+  font-size:.9rem;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width:1024px){
+  .dashboard{grid-template-columns:1fr 1fr}
+}
+@media (max-width:960px){
+  .dashboard{grid-template-columns:1fr}
+  .toolbar{grid-template-columns:1fr 1fr}
+  .app{padding:16px 14px 36px}
+}
+@media (max-width:768px){
+  .app{padding:14px 12px 32px}
+  .hero{padding:20px;margin-bottom:16px}
+  .toolbar{grid-template-columns:1fr;gap:10px}
+  .toolbar .btn{min-height:48px}
+  .case-top{flex-direction:column}
+  .tags{justify-content:flex-start}
+  .hero-actions{flex-direction:column}
+  .btn{width:100%;min-height:48px;padding:14px 16px}
+  .grid{gap:12px}
+  .card{padding:16px}
+  .hero h1{font-size:clamp(1.6rem,4vw,2.4rem)}
+  .hero p{font-size:.95rem}
+  .dashboard{gap:12px}
+  .panel{padding:16px}
+  .panel h2,.panel h3{font-size:1rem}
+  .panel p{font-size:.9rem}
+  .metric{font-size:1.8rem}
+}
+@media (max-width:640px){
+  .app{padding:12px 10px 28px}
+  .hero{padding:18px;border-radius:24px;margin-bottom:14px}
+  .eyebrow{font-size:.8rem;padding:6px 10px}
+  .hero h1{font-size:clamp(1.4rem,5vw,2rem)}
+  .hero p{font-size:.9rem;margin-top:10px}
+  .hero-actions{gap:8px}
+  .btn{min-height:48px;padding:12px 14px;font-size:.95rem;border-radius:14px}
+  .toolbar{grid-template-columns:1fr;gap:8px}
+  .field, select, textarea{font-size:16px;padding:12px 14px;border-radius:14px}
+  .field:focus{outline:2px solid var(--accent);outline-offset:-1px}
+  .case-top{flex-direction:column;gap:10px}
+  .tags{justify-content:flex-start;gap:6px}
+  .tag{padding:5px 8px;font-size:.75rem}
+  .case-num{font-size:.75rem;margin-bottom:4px}
+  .case-title{font-size:1rem;line-height:1.2}
+  .label{font-size:.8rem;margin-bottom:6px}
+  .box{padding:12px;border-radius:14px;font-size:.9rem}
+  .section{margin-top:12px}
+  textarea{min-height:110px;font-size:16px}
+  .upload{padding:12px;border-radius:14px}
+  .upload input{font-size:14px}
+  .img-preview{max-height:200px;border-radius:14px}
+  .actions{gap:8px;flex-wrap:wrap}
+  .actions .btn{flex:1;min-width:80px;font-size:.85rem;padding:10px 12px}
+  .dashboard{gap:10px}
+  .panel{padding:14px;border-radius:20px}
+  .panel h2,.panel h3{font-size:.95rem;margin-bottom:8px}
+  .panel p{font-size:.85rem}
+  .metric{font-size:1.6rem}
+  .progress-wrap{height:10px;border-radius:16px}
+  .footer{font-size:.8rem;margin-top:18px;padding:14px 0 4px}
+  .grid{grid-template-columns:1fr;gap:10px}
+  .card{border-radius:20px;padding:14px}
+}
+@media (max-width:480px){
+  .app{padding:10px 8px 24px}
+  .hero{padding:16px;border-radius:20px;margin-bottom:12px}
+  .eyebrow{font-size:.75rem;padding:5px 8px}
+  .hero h1{font-size:clamp(1.2rem,4vw,1.8rem);line-height:1}
+  .hero p{font-size:.85rem;line-height:1.5}
+  .badges{gap:6px}
+  .badge{padding:5px 8px;font-size:.75rem}
+  .btn{min-height:44px;padding:10px 12px;font-size:.9rem}
+  .field, select, textarea{font-size:16px;padding:10px 12px;border-radius:12px}
+  .case-num{font-size:.7rem}
+  .case-title{font-size:.95rem}
+  .label{font-size:.75rem}
+  .box{padding:10px;font-size:.85rem;border-radius:12px}
+  textarea{min-height:100px;font-size:16px}
+  .actions .btn{font-size:.8rem;padding:8px 10px}
+  .dashboard{grid-template-columns:1fr}
+  .panel{padding:12px}
+  .panel h2,.panel h3{font-size:.9rem}
+  .metric{font-size:1.4rem}
+  .grid{gap:8px}
+  .card{padding:12px;border-radius:16px}
+}
+
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+    padding-top: max(0px, env(safe-area-inset-top));
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+  }
+}
+
+@media print{
+  body{background:white;color:black}
+  .orb,.orb2,.toolbar,.hero-actions .btn:not(.print-keep),.actions,.footer,.dashboard .panel:nth-child(2),.dashboard .panel:nth-child(3){display:none !important}
+  .hero,.panel,.card,.box{background:white !important;color:black !important;box-shadow:none !important;border:1px solid #ccc !important}
+  .box,.hero p,.panel p,textarea,.label{color:#333 !important}
+  textarea,.upload,.img-preview{display:none !important}
+  .hidden{display:block !important}
+  .grid{grid-template-columns:1fr}
+}
+
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com/3.4.17" type="text/javascript"></script>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="orb"></div>
+  <div class="orb2"></div>
+  <div class="app">
+   <section class="hero">
+    <div class="eyebrow">
+     📱 PWA • Anatomia • Educação Física
+    </div>
+    <h1>Anatomia Clínica Interativa</h1>
+    <p>Aplicativo imersivo com 30 casos clínicos descritivos voltados para Educação Física. Cada caso articula ossos, lesões, termos de comparação e relação, divisão do corpo, posição anatômica, planos e eixos. O aluno registra a resposta, envia foto da prática e acompanha o progresso. A resposta do professor fica oculta por senha.</p>
+    <div class="hero-actions">
+     <button id="installBtn" class="btn" style="display: inline-flex; align-items: center; gap: 8px;">⬇️ Baixar app</button> <button class="btn secondary" type="button" onclick="window.print()">📄 Exportar PDF</button> <button class="btn ghost" type="button" onclick="scrollToCases()">🎯 Ir para os casos</button>
+    </div>
+    <div class="badges">
+     <span class="badge">30 casos completos</span> <span class="badge">Senha professor: 🗝</span> <span class="badge">Salvamento local</span> <span class="badge">Fotos por caso</span> <span class="badge">Instalável no celular</span>
+    </div>
+   </section>
+   <section class="dashboard">
+    <div class="panel">
+     <h2>📈 Progresso</h2>
+     <p>Suas anotações são salvas automaticamente no dispositivo.</p>
+     <div class="progress-wrap">
+      <div id="progressBar" class="progress-bar"></div>
+     </div>
+     <p style="margin-top:12px"><span id="doneCount" class="metric">0</span>/<span id="totalCount">30</span></p>
+    </div>
+    <div class="panel">
+     <h2>🔍 Filtrar</h2>
+     <p>Busque por anatomia, lesão, termo ou região.</p>
+    </div>
+    <div class="panel">
+     <h2>📱 Offline</h2>
+     <p id="status-text">Conectado • Dados salvos localmente</p>
+    </div>
+   </section>
+   <section class="toolbar">
+    <input id="search" class="field" type="search" placeholder="Pesquisar casos..."> <select id="category"> <option value="todos">Todas as categorias</option> <option value="membro superior">Membro superior</option> <option value="membro inferior">Membro inferior</option> <option value="axial">Axial / tronco</option> <option value="termos">Termos anatômicos</option> <option value="posicao">Posição anatômica</option> <option value="planos">Planos e eixos</option> <option value="integracao">Integração clínica</option> </select> <button class="btn secondary" type="button" onclick="clearAllNotes()">Limpar anotações</button>
+   </section>
+   <main id="cases" class="cases-container"></main>
+   <footer class="footer">
+    Responsável tecnológico: Cláudia Pinheiro • Universidade Estadual de Maringá
+   </footer>
+  </div>
+  <script>
+    // Service Worker Registration & Update Management
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').then(reg => {
+        // Check for updates every minute
+        setInterval(() => reg.update(), 60000);
+        
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              showUpdateNotification();
+            }
+          });
+        });
+      }).catch(err => console.log('Service Worker registration failed:', err));
+    }
+
+    function showUpdateNotification() {
+      const notification = document.createElement('div');
+      notification.style.cssText = `
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 9999;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        color: white;
+        padding: 16px 20px;
+        border-radius: 16px;
+        box-shadow: 0 8px 32px rgba(0,0,0,.3);
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        max-width: 360px;
+        animation: slideIn 0.3s ease;
+      `;
+      notification.innerHTML = `
+        <span>✨ Nova versão disponível</span>
+        <button onclick="location.reload()" style="
+          background: rgba(255,255,255,.2);
+          border: none;
+          color: white;
+          padding: 6px 12px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-weight: 600;
+          font-size: 0.85rem;
+        ">Recarregar</button>
+      `;
+      document.body.appendChild(notification);
+      setTimeout(() => notification.remove(), 8000);
+    }
+
+    // Offline Status Indicator
+    function updateOnlineStatus() {
+      const indicator = document.getElementById('offline-indicator');
+      if (!navigator.onLine) {
+        if (!indicator) {
+          const div = document.createElement('div');
+          div.id = 'offline-indicator';
+          div.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 143, 152, 0.95);
+            color: white;
+            padding: 12px 16px;
+            text-align: center;
+            z-index: 10000;
+            font-weight: 600;
+            font-size: 0.9rem;
+            backdrop-filter: blur(10px);
+          `;
+          div.textContent = '📡 Modo offline - seus dados estão salvos localmente';
+          document.body.appendChild(div);
+        }
+      } else {
+        if (indicator) indicator.remove();
+      }
+    }
+
+    window.addEventListener('online', updateOnlineStatus);
+    window.addEventListener('offline', updateOnlineStatus);
+    updateOnlineStatus();
+
+    // PWA Install Prompt
+    let deferredPrompt = null;
+    const installBtn = document.getElementById('installBtn');
+    installBtn.style.display = 'none';
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'inline-flex';
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) {
+        // Mostrar instrução quando não houver prompt nativo
+        const instructionModal = document.createElement('div');
+        instructionModal.style.cssText = `
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,.7);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 5000;
+          padding: 16px;
+          backdrop-filter: blur(4px);
+        `;
+        
+        instructionModal.innerHTML = `
+          <div style="
+            background: linear-gradient(135deg, rgba(18,26,51,.95), rgba(12,19,45,.95));
+            border-radius: 24px;
+            padding: 24px;
+            max-width: 400px;
+            width: 100%;
+            border: 1px solid rgba(110,168,255,.2);
+            box-shadow: 0 20px 60px rgba(0,0,0,.4);
+          ">
+            <h3 style="margin: 0 0 12px; color: var(--text); font-size: 1.2rem;">📱 Instalar App</h3>
+            <p style="color: var(--muted); margin: 0 0 16px; line-height: 1.6; font-size: 0.95rem;">
+              Para instalar este app no seu dispositivo:
+            </p>
+            <ol style="color: var(--muted); margin: 0 0 16px; padding-left: 20px; line-height: 1.8; font-size: 0.9rem;">
+              <li style="margin-bottom: 8px;"><strong style="color: var(--text);">Android:</strong> Toque no menu (⋮) → "Instalar app" ou "Adicionar à tela inicial"</li>
+              <li style="margin-bottom: 8px;"><strong style="color: var(--text);">iPhone:</strong> Toque em Compartilhar → "Adicionar à Tela Inicial"</li>
+              <li><strong style="color: var(--text);">Navegador:</strong> Abra esta página no Chrome, Safari ou Firefox móvel</li>
+            </ol>
+            <button onclick="this.parentElement.parentElement.remove()" style="
+              width: 100%;
+              padding: 12px;
+              border-radius: 12px;
+              border: none;
+              background: linear-gradient(135deg, var(--accent), var(--accent2));
+              color: white;
+              cursor: pointer;
+              font-weight: 600;
+              font-size: 14px;
+            ">Entendi</button>
+          </div>
+        `;
+        
+        document.body.appendChild(instructionModal);
+        instructionModal.addEventListener('click', e => {
+          if(e.target === instructionModal) instructionModal.remove();
+        });
+        return;
+      }
+      
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      deferredPrompt = null;
+      if(outcome === 'accepted') {
+        installBtn.style.display = 'none';
+      }
+    });
+
+    // Detectar se app já está instalado
+    window.addEventListener('appinstalled', () => {
+      installBtn.style.display = 'none';
+    });
+
+    const CASES = [
+      {
+        category:'membro superior',
+        title:'Fratura de clavícula após queda com braço estendido',
+        tags:['clavícula','escápula','apendicular','plano frontal'],
+        description:'Durante uma partida de futsal, o aluno salta para disputar a bola e, ao retornar ao solo, perde o equilíbrio. Na tentativa de se proteger, apoia o membro superior estendido no chão. Imediatamente leva a mão ao ombro, refere dor intensa e evita qualquer movimento do braço. O professor observa deformidade discreta na região clavicular, inclinação do tronco para o lado doloroso e proteção espontânea do membro lesionado.',
+        question:'a) Quais ossos estão envolvidos nessa lesão? b) A qual divisão do esqueleto pertencem? c) Descreva a localização da lesão usando termos anatômicos em relação ao tronco e ao membro superior. d) Em qual plano ocorreu o movimento predominante do ombro no momento da queda?',
+        answer:'Os ossos envolvidos são clavícula e escápula, associados ao cíngulo do membro superior. Eles pertencem ao esqueleto apendicular. A lesão pode ser descrita como lateral em relação ao tronco e proximal em relação às porções mais distais do membro superior. O movimento predominante relacionado ao afastamento do braço do corpo é analisado no plano frontal.',
+        meta:'Conteúdos: cíngulo do membro superior, lateralidade, proximal/distal, plano frontal.'
+      },
+      {
+        category:'membro superior',
+        title:'Luxação de ombro em arremesso acima da cabeça',
+        tags:['úmero','escápula','ombro','abdução'],
+        description:'Durante uma aula prática de handebol, um aluno realiza um arremesso acima da cabeça com força máxima. No momento final do gesto, sente um estalo súbito seguido de dor intensa, interrompendo a atividade. O braço permanece afastado do corpo, com grande limitação para retornar à posição neutra e evidente receio de movimentar o ombro.',
+        question:'a) Quais ossos participam dessa articulação? b) Qual termo anatômico descreve a posição do braço em relação ao tronco? c) Em qual plano ocorre predominantemente esse movimento? d) Qual a relação proximal e distal entre ombro, cotovelo e mão?',
+        answer:'Participam da articulação principalmente úmero e escápula. O braço está lateral ao tronco, em posição de abdução. O gesto ocorre predominantemente no plano frontal, embora o arremesso possa combinar componentes de outros planos. O ombro é proximal em relação ao cotovelo e à mão, enquanto a mão é distal em relação ao ombro.',
+        meta:'Conteúdos: articulação do ombro, abdução, proximal/distal, plano do movimento.'
+      },
+      {
+        category:'membro superior',
+        title:'Dor lateral no cotovelo após sobrecarga repetitiva',
+        tags:['úmero','rádio','ulna','lateral'],
+        description:'Em um programa de musculação, o aluno repete exercícios com pegada forte e movimentos frequentes de punho e antebraço. Após alguns dias, começa a relatar dor localizada na região externa do cotovelo, especialmente ao segurar objetos, apertar equipamentos e repetir gestos esportivos com tração.',
+        question:'a) Quais ossos estão relacionados a essa articulação? b) Qual termo anatômico descreve corretamente a localização da dor? c) O cotovelo é proximal ou distal em relação ao ombro? d) Qual a função biomecânica dessa articulação no movimento do membro superior?',
+        answer:'Os ossos relacionados são úmero, rádio e ulna. A dor localiza-se lateralmente no cotovelo. O cotovelo é distal em relação ao ombro. Biomecanicamente, essa articulação permite movimentos de flexão e extensão do antebraço e participa da transmissão de força entre braço e mão.',
+        meta:'Conteúdos: cotovelo, lateralidade, distalidade, função articular.'
+      },
+      {
+        category:'membro superior',
+        title:'Fratura de rádio distal em queda para frente',
+        tags:['rádio distal','punho','apendicular'],
+        description:'Durante uma corrida orientada em quadra, a aluna tropeça e cai para frente. Para amortecer o impacto, apoia as mãos no solo. Logo em seguida refere dor intensa no punho, dificuldade para sustentar peso com a mão e limitação para movimentar a articulação.',
+        question:'a) Qual osso está mais provavelmente lesionado? b) O que significa o termo distal nesse contexto? c) Esse osso pertence a qual divisão do esqueleto? d) Como essa região se relaciona com o cotovelo em termos anatômicos?',
+        answer:'O osso mais provavelmente lesionado é o rádio, em sua porção distal. Distal significa mais distante do tronco ou da origem do membro. Esse osso pertence ao esqueleto apendicular. A região do punho está distal em relação ao cotovelo, e o cotovelo é proximal em relação ao punho.',
+        meta:'Conteúdos: rádio distal, esqueleto apendicular, relação punho-cotovelo.'
+      },
+      {
+        category:'membro superior',
+        title:'Dor no ombro durante elevação lateral com halteres',
+        tags:['abdução','úmero','escápula','eixo ântero-posterior'],
+        description:'Durante um treino de fortalecimento, o aluno realiza elevação lateral com halteres. Ao aproximar-se de 90 graus de amplitude, refere dor no ombro e dificuldade para continuar a subida. O tronco permanece relativamente estável, mas o gesto se torna compensado na tentativa de completar o movimento.',
+        question:'a) Qual o nome do movimento realizado? b) Em qual plano ele ocorre? c) Qual eixo está envolvido? d) Quais ossos participam diretamente dessa ação?',
+        answer:'O movimento realizado é a abdução do ombro. Ele ocorre no plano frontal, em torno do eixo ântero-posterior. Participam diretamente úmero e escápula, com participação funcional da clavícula no cíngulo do membro superior.',
+        meta:'Conteúdos: abdução, plano frontal, eixo ântero-posterior, cintura escapular.'
+      },
+      {
+        category:'membro inferior',
+        title:'Lesão no joelho após mudança brusca de direção',
+        tags:['fêmur','tíbia','patela','sagital'],
+        description:'Durante um circuito de agilidade com cones, o aluno realiza uma mudança brusca de direção. No momento da rotação e desaceleração, sente dor intensa no joelho, relata sensação de instabilidade e interrompe imediatamente o exercício, evitando apoiar totalmente o membro.',
+        question:'a) Quais ossos formam essa articulação? b) Em qual plano ocorre a flexão do joelho? c) O joelho é superior ou inferior ao quadril? d) O pé é proximal ou distal em relação ao joelho?',
+        answer:'A articulação envolve fêmur, tíbia e patela. A flexão do joelho ocorre predominantemente no plano sagital. O joelho é inferior em relação ao quadril. O pé é distal em relação ao joelho, enquanto o joelho é proximal em relação ao pé.',
+        meta:'Conteúdos: joelho, fêmur, tíbia, patela, plano sagital, inferior/proximal.'
+      },
+      {
+        category:'membro inferior',
+        title:'Fratura de tíbia após impacto direto na perna',
+        tags:['tíbia','membro inferior','distal','proximal'],
+        description:'Em uma disputa durante jogo coletivo, o aluno sofre impacto direto na perna e passa a apresentar dor intensa, dificuldade para apoiar o peso corporal e limitação imediata para continuar a atividade. A região dolorosa localiza-se entre o joelho e o tornozelo.',
+        question:'a) Qual osso foi afetado? b) A qual divisão do esqueleto ele pertence? c) Como essa estrutura se localiza em relação ao fêmur? d) Como se localiza em relação ao pé?',
+        answer:'O osso afetado é a tíbia. Ele pertence ao esqueleto apendicular. A tíbia está distal em relação ao fêmur. Em relação ao pé, está proximal. Também integra o membro inferior, ficando inferior ao tronco.',
+        meta:'Conteúdos: tíbia, apendicular, distal/proximal, membro inferior.'
+      },
+      {
+        category:'membro inferior',
+        title:'Entorse de tornozelo na aterrissagem',
+        tags:['tíbia','fíbula','tálus','lateral'],
+        description:'Durante um salto vertical, o aluno aterrissa com o pé mal posicionado e gira o tornozelo. Ele refere dor na parte externa da articulação, dificuldade para apoiar o peso e receio de continuar a movimentação. Há edema discreto na região lateral.',
+        question:'a) Quais ossos estão envolvidos nessa articulação? b) Qual termo anatômico descreve a região afetada? c) Em qual plano ocorre predominantemente o movimento de inversão/eversão? d) Qual a importância funcional do tornozelo na locomoção?',
+        answer:'Os ossos envolvidos são tíbia, fíbula e tálus. A região afetada pode ser descrita como lateral. Os movimentos de inversão e eversão relacionam-se ao plano frontal. O tornozelo é essencial para sustentação, equilíbrio, adaptação ao solo e progressão da marcha e da corrida.',
+        meta:'Conteúdos: tornozelo, lateralidade, plano frontal, função locomotora.'
+      },
+      {
+        category:'membro inferior',
+        title:'Fratura de fêmur após queda de grande impacto',
+        tags:['fêmur','apendicular','coxa','inferior'],
+        description:'Após uma queda com alto impacto, o aluno apresenta dor importante na coxa e não consegue sustentar o peso do corpo sobre o membro acometido. O segmento doloroso está claramente entre a pelve e o joelho.',
+        question:'a) Qual osso está lesionado? b) A qual divisão do esqueleto ele pertence? c) Como ele se posiciona em relação ao tronco? d) Como se posiciona em relação ao joelho?',
+        answer:'O osso lesionado é o fêmur. Ele pertence ao esqueleto apendicular. Em relação ao tronco, localiza-se inferiormente. Em relação ao joelho, está proximal.',
+        meta:'Conteúdos: fêmur, coxa, esqueleto apendicular, orientação anatômica.'
+      },
+      {
+        category:'membro inferior',
+        title:'Dor anterior no joelho durante agachamento',
+        tags:['patela','anterior','plano sagital','eixo transversal'],
+        description:'Durante séries de agachamento, o aluno relata dor na parte da frente do joelho, principalmente na fase de descida e na volta à posição inicial. O desconforto aumenta quando a repetição é feita com maior carga.',
+        question:'a) Quais ossos estão envolvidos? b) Qual termo anatômico descreve a região da dor? c) Em qual plano ocorre o movimento predominante? d) Qual eixo está associado a esse gesto?',
+        answer:'Participam patela, fêmur e tíbia. A região dolorosa é anterior. O movimento predominante ocorre no plano sagital. O eixo correspondente é o transversal.',
+        meta:'Conteúdos: joelho, patela, anterior, plano sagital, eixo transversal.'
+      },
+      {
+        category:'axial',
+        title:'Dor lombar após levantamento de peso com técnica inadequada',
+        tags:['coluna lombar','axial','posterior','inferior'],
+        description:'Durante um exercício de levantamento, o aluno flexiona o tronco sem controle postural adequado e, após o esforço, relata dor na região inferior das costas. Refere desconforto para inclinar e girar o tronco, além de sensação de rigidez local.',
+        question:'a) Qual estrutura está envolvida? b) Essa estrutura pertence a qual divisão do esqueleto? c) A região lombar está anterior ou posterior ao abdome? d) Qual a função dessa região no corpo?',
+        answer:'A estrutura envolvida é a coluna lombar. Ela pertence ao esqueleto axial. A região lombar está posterior ao abdome e inferior ao tórax. Sua função inclui sustentação do tronco, mobilidade e transmissão de cargas.',
+        meta:'Conteúdos: coluna lombar, axial, posterioridade, sustentação do tronco.'
+      },
+      {
+        category:'axial',
+        title:'Hipercifose postural com ombros projetados à frente',
+        tags:['coluna torácica','postura','anteriorização','posição anatômica'],
+        description:'Durante uma avaliação postural em ortostase, o professor observa aumento da curvatura torácica e projeção dos ombros à frente. O aluno apresenta alinhamento inadequado da cintura escapular e mantém a cabeça discretamente avançada.',
+        question:'a) Qual estrutura está alterada? b) Qual termo anatômico descreve a posição dos ombros? c) Qual referência anatômica é usada para avaliar postura? d) Qual impacto isso pode ter no movimento?',
+        answer:'A estrutura alterada é principalmente a coluna torácica, associada ao posicionamento do cíngulo do membro superior. Os ombros estão anteriorizados. A referência usada é a posição anatômica. Essa alteração pode comprometer a mecânica escapular e a eficiência de movimentos do ombro e do tronco.',
+        meta:'Conteúdos: postura, coluna torácica, posição anatômica, biomecânica.'
+      },
+      {
+        category:'axial',
+        title:'Trauma lateral em costelas durante contato esportivo',
+        tags:['costelas','tórax','lateral','axial'],
+        description:'Durante uma disputa corporal em aula prática, o aluno sofre impacto direto na lateral do tórax. Em seguida, refere dor ao respirar profundamente, à palpação local e durante movimentos amplos do tronco.',
+        question:'a) Quais ossos estão envolvidos? b) A qual divisão do esqueleto pertencem? c) Qual termo anatômico descreve a região? d) Qual a função dessas estruturas?',
+        answer:'Os ossos envolvidos são as costelas. Elas pertencem ao esqueleto axial. A região descrita é lateral do tórax. As costelas protegem estruturas torácicas e participam da mecânica respiratória.',
+        meta:'Conteúdos: costelas, esqueleto axial, lateralidade, proteção torácica.'
+      },
+      {
+        category:'axial',
+        title:'Impacto frontal sobre o esterno',
+        tags:['esterno','anterior','medial','axial'],
+        description:'Em um choque durante atividade esportiva, a aluna recebe impacto direto na parte frontal do tórax e refere dor localizada na linha média anterior, especialmente ao pressionar a região ou expandir o tórax.',
+        question:'a) Qual osso está envolvido? b) Quais termos anatômicos descrevem a localização? c) A qual divisão do esqueleto essa estrutura pertence? d) Qual sua importância funcional?',
+        answer:'O osso envolvido é o esterno. A localização é anterior e medial. Ele pertence ao esqueleto axial. Sua função está relacionada à proteção das estruturas torácicas e à integração da caixa torácica.',
+        meta:'Conteúdos: esterno, anterior/medial, caixa torácica, esqueleto axial.'
+      },
+      {
+        category:'termos',
+        title:'Dor medial no joelho após atividade intensa',
+        tags:['medial','plano mediano','joelho'],
+        description:'Após uma sessão intensa de treino, o aluno relata dor na parte interna do joelho. Ao descrever a queixa, o professor solicita que ele use a terminologia anatômica correta para localizar a região dolorosa.',
+        question:'a) Qual termo anatômico descreve essa localização? b) Qual a relação dessa região com o plano mediano? c) Qual a diferença entre medial e lateral? d) Qual a utilidade clínica dessa descrição?',
+        answer:'O termo correto é medial. Isso indica proximidade em relação ao plano mediano do corpo. Lateral é o oposto, ou seja, mais afastado do plano mediano. Clinicamente, essa descrição ajuda a localizar com precisão a área comprometida e orientar a avaliação.',
+        meta:'Conteúdos: medial, lateral, plano mediano, localização clínica.'
+      },
+      {
+        category:'termos',
+        title:'Dor lateral no tornozelo após torção',
+        tags:['lateral','tornozelo','fíbula','plano mediano'],
+        description:'Após uma torção, o aluno refere dor na face externa do tornozelo e dificuldade para estabilizar o pé. O professor pede uma descrição anatômica precisa da área afetada.',
+        question:'a) Qual termo anatômico descreve essa região? b) Como ela se relaciona com o plano mediano? c) Quais ossos estão próximos? d) Por que essa região é importante para o movimento?',
+        answer:'A região é lateral, pois está afastada do plano mediano. Nessa área há relação importante com a fíbula e estruturas laterais do tornozelo. Essa região é fundamental para estabilidade e controle durante marcha, corrida e mudanças de direção.',
+        meta:'Conteúdos: lateralidade, tornozelo, fíbula, controle do movimento.'
+      },
+      {
+        category:'termos',
+        title:'Lesão proximal no braço próxima ao ombro',
+        tags:['proximal','ombro','tronco'],
+        description:'Após um esforço repetitivo, o aluno relata dor na porção do braço que fica mais próxima do ombro. O professor o orienta a empregar o termo anatômico adequado para comparar essa área com regiões mais distais do membro.',
+        question:'a) Qual termo anatômico é o mais adequado? b) Como essa região se relaciona com o tronco? c) Qual é o termo oposto? d) Dê um exemplo prático dessa comparação.',
+        answer:'O termo adequado é proximal. Isso significa mais próximo do tronco. O oposto é distal. Um exemplo é afirmar que o ombro é proximal em relação à mão, enquanto a mão é distal em relação ao ombro.',
+        meta:'Conteúdos: proximal/distal, relação com o tronco, comparação anatômica.'
+      },
+      {
+        category:'termos',
+        title:'Lesão distal na perna próxima ao pé',
+        tags:['distal','pé','joelho','membro inferior'],
+        description:'Ao final de uma corrida, o aluno refere dor na parte da perna localizada mais próxima do pé. Ele precisa descrever anatomicamente a posição dessa região em comparação com o joelho e o tronco.',
+        question:'a) Qual termo anatômico descreve essa localização? b) Como essa região se relaciona com o joelho? c) Qual o termo oposto? d) Qual a importância biomecânica desse segmento?',
+        answer:'A região é distal, pois está mais distante do tronco. Em relação ao joelho, ela também é distal. O termo oposto é proximal. Biomecanicamente, esse segmento participa da transmissão de carga ao tornozelo e do controle da locomoção.',
+        meta:'Conteúdos: distalidade, proximalidade, membro inferior, biomecânica.'
+      },
+      {
+        category:'termos',
+        title:'Dor na região anterior da perna',
+        tags:['anterior','posterior','posição anatômica'],
+        description:'Durante uma corrida contínua, o aluno passa a sentir desconforto na parte da frente da perna. O professor solicita que ele descreva essa localização usando a terminologia anatômica correta e compare com a região oposta.',
+        question:'a) Qual termo anatômico corresponde à frente da perna? b) Qual é o termo oposto? c) Como essa direção é compreendida na posição anatômica? d) Cite um exemplo funcional ligado a essa região.',
+        answer:'O termo correspondente é anterior. O oposto é posterior. Na posição anatômica, anterior refere-se à frente do corpo. Um exemplo funcional é a dor em estruturas da região anterior da perna durante a corrida.',
+        meta:'Conteúdos: anterior/posterior, posição anatômica, direção corporal.'
+      },
+      {
+        category:'termos',
+        title:'Dor na região posterior da coxa após aceleração',
+        tags:['posterior','coxa','quadril','joelho'],
+        description:'Durante um exercício com aceleração rápida, o aluno relata dor atrás da coxa e reduz a amplitude da corrida. A queixa aparece especialmente em gestos que exigem impulsão e desaceleração.',
+        question:'a) Qual termo anatômico descreve essa localização? b) Qual é sua relação com anterior? c) Que função muscular essa região costuma desempenhar? d) Como a dor pode interferir no movimento?',
+        answer:'A localização é posterior. Esse termo se opõe a anterior. A região posterior da coxa abriga musculatura importante para extensão do quadril e flexão do joelho. A dor pode comprometer corrida, impulsão, frenagem e estabilidade dinâmica.',
+        meta:'Conteúdos: posterioridade, coxa, função muscular, impacto funcional.'
+      },
+      {
+        category:'posicao',
+        title:'Exercício com palmas das mãos voltadas para trás',
+        tags:['posição anatômica','mãos','referência'],
+        description:'Na demonstração de um exercício, o aluno permanece em pé e alinhado, porém mantém as palmas das mãos voltadas para trás. Ele pergunta se essa configuração corresponde à posição anatômica padrão usada como referência em Anatomia.',
+        question:'a) A posição está correta? b) Como deve ser a posição anatômica padrão? c) Por que essa referência é importante? d) Como o erro interfere na análise do movimento?',
+        answer:'A posição não está correta. Na posição anatômica padrão, o corpo permanece em pé, com olhar para frente, membros superiores ao lado do corpo e palmas voltadas anteriormente. Essa referência padroniza a descrição das estruturas. Se ela não é respeitada, termos como anterior, posterior, medial e lateral podem ser interpretados de forma incorreta.',
+        meta:'Conteúdos: posição anatômica, padronização, orientação espacial.'
+      },
+      {
+        category:'posicao',
+        title:'Avaliação corporal com referência em ortostase',
+        tags:['ortostase','posição anatômica','alinhamento'],
+        description:'Durante a avaliação inicial, o professor posiciona o aluno em pé, com cabeça ereta, membros alinhados e olhar voltado para frente, buscando uma referência padrão para descrever assimetrias e desvios.',
+        question:'a) Que referência anatômica está sendo usada? b) Quais elementos corporais devem ser observados nessa posição? c) Como essa postura ajuda na descrição das regiões? d) Por que ela é importante na avaliação em Educação Física?',
+        answer:'A referência utilizada é a posição anatômica. Nela observam-se alinhamento do corpo, direção do olhar, posição dos membros e orientação das palmas. Essa postura permite descrever as regiões de maneira padronizada. Em Educação Física, ela é fundamental para avaliação postural, análise de movimento e comunicação precisa.',
+        meta:'Conteúdos: posição anatômica, alinhamento corporal, avaliação postural.'
+      },
+      {
+        category:'posicao',
+        title:'Aluno em decúbito ventral durante prática no solo',
+        tags:['decúbito ventral','posição corporal','anterior/posterior'],
+        description:'Durante uma prática de alongamento no solo, o aluno deita com a face voltada para baixo e os membros posicionados ao longo do corpo. O professor utiliza a situação para discutir terminologia posicional.',
+        question:'a) Como se chama essa posição corporal? b) Qual região do corpo está voltada para o solo? c) Como essa posição se diferencia da posição anatômica? d) Que utilidade tem reconhecer esse tipo de posição?',
+        answer:'Essa posição é chamada decúbito ventral ou prona. A região anterior do corpo fica voltada para o solo. Ela se diferencia da posição anatômica porque o corpo está deitado, e não em ortostase. Reconhecer a posição é importante para descrição clínica, avaliação motora e instrução de exercícios.',
+        meta:'Conteúdos: decúbito ventral, orientação corporal, terminologia posicional.'
+      },
+      {
+        category:'posicao',
+        title:'Aluno em decúbito dorsal após exercício',
+        tags:['decúbito dorsal','supina','posições do corpo'],
+        description:'Ao final de uma atividade intensa, o aluno deita-se com o dorso apoiado no solo, face voltada para cima, para recuperar a respiração. O professor aproveita para revisar a terminologia posicional.',
+        question:'a) Qual o nome dessa posição? b) Que parte do corpo fica em contato com o solo? c) Como ela pode ser descrita em oposição ao decúbito ventral? d) Por que conhecer essas posições é relevante na prática profissional?',
+        answer:'A posição é o decúbito dorsal, também chamado supina. O dorso fica em contato com o solo, enquanto a face anterior fica voltada para cima. Ela se opõe ao decúbito ventral ou prona. Conhecer essas posições é relevante para avaliação, condução de exercícios e comunicação clínica.',
+        meta:'Conteúdos: decúbito dorsal, supina/prona, comunicação clínica.'
+      },
+      {
+        category:'planos',
+        title:'Flexão de tronco ao inclinar o corpo para frente',
+        tags:['plano sagital','eixo transversal','tronco'],
+        description:'Em uma atividade de alongamento, o aluno inclina o corpo para frente em direção aos pés, levando o tronco anteriormente enquanto mantém os membros inferiores relativamente estáveis.',
+        question:'a) Em qual plano o movimento ocorre? b) Qual eixo está associado? c) Qual termo direcional ajuda a compreender a direção do gesto? d) Qual a utilidade funcional desse movimento?',
+        answer:'O movimento ocorre no plano sagital. O eixo associado é o transversal. O termo direcional relacionado é anterior, quando comparado à referência da posição anatômica. Funcionalmente, esse gesto participa de alongamentos, tarefas diárias e preparação motora.',
+        meta:'Conteúdos: plano sagital, eixo transversal, flexão de tronco.'
+      },
+      {
+        category:'planos',
+        title:'Rotação de tronco em exercício funcional',
+        tags:['plano transversal','eixo longitudinal','rotação'],
+        description:'Durante um exercício funcional, o aluno gira o tronco para os lados mantendo apoio dos pés no solo. O movimento exige controle do core e coordenação com a pelve.',
+        question:'a) Em qual plano a rotação é analisada? b) Qual eixo está envolvido? c) Qual o nome do movimento? d) Qual a aplicação desse padrão na Educação Física?',
+        answer:'A rotação de tronco é analisada no plano transversal, em torno do eixo longitudinal. O nome do movimento é rotação. Esse padrão é importante em gestos esportivos, exercícios de controle do core e transferência de força entre segmentos corporais.',
+        meta:'Conteúdos: plano transversal, eixo longitudinal, rotação de tronco.'
+      },
+      {
+        category:'planos',
+        title:'Abdução do ombro ao elevar o braço lateralmente',
+        tags:['abdução','plano frontal','úmero','escápula'],
+        description:'Durante um aquecimento específico, o aluno eleva o braço lateralmente até a altura do ombro. O gesto é executado com o cotovelo estendido e o tronco estabilizado, evidenciando um padrão motor clássico de análise anatômica.',
+        question:'a) Qual o nome do movimento? b) Em qual plano ele ocorre? c) Qual eixo está associado? d) Quais ossos participam diretamente?',
+        answer:'O movimento é a abdução do ombro. Ele ocorre no plano frontal. O eixo correspondente é o ântero-posterior. Participam diretamente úmero e escápula, com participação funcional da clavícula.',
+        meta:'Conteúdos: abdução, plano frontal, eixo ântero-posterior, ombro.'
+      },
+      {
+        category:'planos',
+        title:'Flexão e extensão do joelho em exercício de força',
+        tags:['joelho','sagital','transversal','fêmur/tíbia'],
+        description:'Durante um exercício de fortalecimento, o aluno dobra e estende repetidamente o joelho, controlando o alinhamento do membro inferior. O movimento é central para tarefas como agachar, levantar e saltar.',
+        question:'a) Em qual plano esse movimento é analisado? b) Qual eixo está relacionado? c) Quais ossos participam? d) Qual a função desse gesto em atividades físicas?',
+        answer:'O movimento é analisado no plano sagital, em torno do eixo transversal. Participam fêmur, tíbia e patela. Esse gesto é fundamental para marcha, corrida, salto, agachamento e diversas ações esportivas.',
+        meta:'Conteúdos: joelho, plano sagital, eixo transversal, função locomotora.'
+      },
+      {
+        category:'planos',
+        title:'Inclinação lateral do tronco durante alongamento',
+        tags:['plano frontal','tronco','lateralidade'],
+        description:'Em uma sequência de alongamento, o aluno inclina o tronco para o lado, afastando a cabeça e o ombro do eixo central do corpo sem realizar rotação.',
+        question:'a) Em qual plano esse movimento é observado? b) Qual termo anatômico ajuda a compreender a direção? c) Que segmento axial está predominantemente envolvido? d) Qual pode ser a utilidade desse gesto?',
+        answer:'O movimento é observado no plano frontal. O termo anatômico ligado à direção é lateral. O segmento axial predominantemente envolvido é o tronco, especialmente a coluna vertebral. O gesto pode ser útil em mobilidade, alongamento e consciência corporal.',
+        meta:'Conteúdos: plano frontal, lateralidade, coluna e mobilidade.'
+      },
+      {
+        category:'integracao',
+        title:'Dor ao aterrissar após salto vertical',
+        tags:['salto','fêmur','tíbia','pé/joelho'],
+        description:'Ao executar um salto vertical, o aluno aterrissa com desconforto importante no membro inferior, relatando dor logo após o contato com o solo. Há dificuldade para repetir a impulsão e receio de apoiar com firmeza.',
+        question:'a) Quais ossos estão mais envolvidos nessa situação? b) Em qual plano ocorre predominantemente a aterrissagem? c) Como descrever a relação anatômica entre pé e joelho? d) Qual risco de lesão pode estar associado a essa mecânica?',
+        answer:'Estão mais envolvidos fêmur, tíbia, patela, tálus e demais ossos do pé. A aterrissagem com flexoextensão predomina no plano sagital. O pé é distal em relação ao joelho e o joelho é proximal em relação ao pé. Uma mecânica inadequada pode aumentar o risco de sobrecarga ligamentar e articular.',
+        meta:'Conteúdos: salto, aterrissagem, distal/proximal, risco de lesão.'
+      },
+      {
+        category:'integracao',
+        title:'Coordenação contralateral durante a corrida',
+        tags:['corrida','contralateral','coordenação'],
+        description:'Ao observar a corrida de um aluno, o professor nota que o braço direito avança enquanto a perna esquerda se projeta, formando um padrão alternado e sincronizado entre os lados do corpo.',
+        question:'a) Qual termo anatômico descreve essa relação? b) Qual a função biomecânica desse padrão? c) Por que ele é importante para a coordenação corporal? d) Como essa observação pode ajudar na prática docente?',
+        answer:'O termo anatômico é contralateral. Esse padrão melhora equilíbrio, eficiência mecânica e transferência de energia durante a corrida. Ele é importante para a coordenação global do corpo. Na prática docente, ajuda a reconhecer padrões adequados e identificar compensações.',
+        meta:'Conteúdos: contralateralidade, coordenação, corrida, observação do movimento.'
+      },
+      {
+        category:'integracao',
+        title:'Uso de linha imaginária para dividir o corpo em direita e esquerda',
+        tags:['plano sagital','plano mediano','divisão do corpo'],
+        description:'Durante a explicação teórica, o professor usa uma linha imaginária que separa o corpo em lados direito e esquerdo, ajudando os alunos a entender referências espaciais e termos descritivos.',
+        question:'a) Como se chama esse plano? b) Qual sua função anatômica? c) Como ele pode ser aplicado na avaliação física? d) Dê um exemplo de uso desse plano em uma descrição corporal.',
+        answer:'Esse plano é o plano sagital e, quando divide o corpo em metades iguais, é chamado plano mediano. Sua função é organizar a referência espacial do corpo. Na avaliação física, permite analisar movimentos como flexão e extensão. Um exemplo é dizer que uma estrutura está medial ou lateral em relação ao plano mediano.',
+        meta:'Conteúdos: plano sagital, plano mediano, divisão do corpo.'
+      },
+      {
+        category:'integracao',
+        title:'Movimento circular completo do ombro no aquecimento',
+        tags:['circundução','múltiplos planos','úmero','escápula'],
+        description:'No aquecimento, o aluno realiza movimento circular amplo com o braço, combinando flexão, extensão, abdução e adução de modo contínuo. O gesto serve para preparar o complexo do ombro para tarefas mais intensas.',
+        question:'a) Qual o nome desse movimento? b) Quais planos estão envolvidos? c) Quais ossos se relacionam mais diretamente ao gesto? d) Qual a aplicação desse padrão na prática da Educação Física?',
+        answer:'O movimento é chamado circundução. Ele integra ações em múltiplos planos, especialmente sagital e frontal. Relaciona-se principalmente a úmero, escápula e clavícula. Na prática, é usado para mobilidade articular, aquecimento e preparação para movimentos amplos.',
+        meta:'Conteúdos: circundução, integração de planos, mobilidade do ombro.'
+      },
+      {
+        category:'integracao',
+        title:'Lesão combinada em ombro e joelho após queda',
+        tags:['ombro','joelho','apendicular','análise funcional'],
+        description:'Após uma queda durante atividade esportiva, o aluno passa a relatar dor no ombro e no joelho. Ele evita apoiar totalmente o membro inferior e também apresenta dificuldade para elevar o membro superior, limitando gestos básicos da prática e do deslocamento.',
+        question:'a) Quais divisões do esqueleto estão envolvidas? b) Quais ossos principais podem estar relacionados a cada segmento? c) Que termos anatômicos ajudam a localizar essas lesões? d) Como essas queixas repercutem funcionalmente no movimento?',
+        answer:'As regiões envolvidas pertencem ao esqueleto apendicular, atingindo membro superior e membro inferior. No ombro podem estar envolvidos clavícula, escápula e úmero; no joelho, fêmur, tíbia e patela. Termos como lateral, medial, anterior, posterior, proximal e distal ajudam a localizar as lesões. Funcionalmente, as queixas comprometem locomoção, apoio, alcance e elevação do membro superior.',
+        meta:'Conteúdos: integração clínica, esqueleto apendicular, linguagem anatômica aplicada.'
+      }
+    ];
+
+    function scrollToCases(){
+      document.getElementById('cases').scrollIntoView({behavior:'smooth', block:'start'});
+    }
+
+    function createCard(caso, index){
+      const tags = caso.tags.map(t => `<span class="card-tag">${t}</span>`).join('');
+      const searchText = `${caso.title} ${caso.description} ${caso.question} ${caso.answer} ${caso.meta} ${caso.tags.join(' ')}`.toLowerCase();
+      return `
+        <article class="card" data-category="${caso.category}" data-search="${searchText}">
+          <div class="card-header">
+            <div>
+              <div class="card-number">Caso ${index + 1}</div>
+              <h2 class="card-title">${caso.title}</h2>
+            </div>
+          </div>
+
+          <div class="card-tags">${tags}</div>
+
+          <div class="card-section">
+            <span class="card-label">Situação clínica</span>
+            <div class="card-text">${caso.description}</div>
+          </div>
+
+          <div class="card-section">
+            <span class="card-label">Pergunta</span>
+            <div class="card-text question">${caso.question}</div>
+          </div>
+
+          <div class="card-section">
+            <span class="card-label">Resposta do professor</span>
+            <div id="answer-${index}" class="card-text answer hidden">${caso.answer}</div>
+            <button class="btn" type="button" style="width:100%;margin-top:6px;padding:8px;font-size:.85rem;height:auto;min-height:auto;border-radius:10px;" onclick="showAnswer(${index})">🔓 Ver resposta</button>
+          </div>
+
+          <div class="card-section">
+            <span class="card-label">Conteúdos</span>
+            <div class="card-text meta">${caso.meta}</div>
+          </div>
+
+          <div class="card-section">
+            <label class="card-label" for="note-${index}">Sua resposta</label>
+            <textarea id="note-${index}" class="card-textarea" placeholder="Digite sua resposta..."></textarea>
+          </div>
+
+          <div class="card-section">
+            <label class="card-label" for="photo-${index}">Foto da prática</label>
+            <div class="card-upload">
+              <input id="photo-${index}" type="file" accept="image/*" capture="environment" onchange="previewImage(event, ${index})">
+            </div>
+            <img id="img-${index}" class="card-image" alt="Foto do caso ${index + 1}">
+          </div>
+
+          <div class="card-actions">
+            <button class="btn secondary" type="button" onclick="clearNote(${index})">Limpar</button>
+          </div>
+        </article>
+      `;
+}
+
+function renderCases(){
+  const container = document.getElementById('cases');
+  container.innerHTML = CASES.map(createCard).join('');
+  restoreNotes();
+  restoreImages();
+  updateProgress();
+}
+
+function showAnswer(index){
+  const modal = document.createElement('div');
+  modal.style.cssText = `
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 5000;
+    padding: 16px;
+    backdrop-filter: blur(4px);
+  `;
+  
+  modal.innerHTML = `
+    <div style="
+      background: linear-gradient(135deg, rgba(18,26,51,.95), rgba(12,19,45,.95));
+      border-radius: 24px;
+      padding: 24px;
+      max-width: 380px;
+      width: 100%;
+      border: 1px solid rgba(110,168,255,.2);
+      box-shadow: 0 20px 60px rgba(0,0,0,.4);
+    ">
+      <h3 style="margin: 0 0 16px; color: var(--text); font-size: 1.2rem;">Senha do Professor</h3>
+      <input type="password" id="pwd-input" placeholder="Digite a senha..." style="
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 12px;
+        border: 1px solid rgba(110,168,255,.2);
+        background: rgba(255,255,255,.08);
+        color: var(--text);
+        font-size: 16px;
+        margin-bottom: 16px;
+        font-family: inherit;
+      ">
+      <div style="display: flex; gap: 10px;">
+        <button onclick="this.parentElement.parentElement.parentElement.remove()" style="
+          flex: 1;
+          padding: 12px;
+          border-radius: 12px;
+          border: none;
+          background: rgba(255,255,255,.08);
+          color: var(--text);
+          cursor: pointer;
+          font-weight: 600;
+          font-size: 14px;
+        ">Cancelar</button>
+        <button id="confirm-pwd" style="
+          flex: 1;
+          padding: 12px;
+          border-radius: 12px;
+          border: none;
+          background: linear-gradient(135deg, var(--accent), var(--accent2));
+          color: white;
+          cursor: pointer;
+          font-weight: 600;
+          font-size: 14px;
+        ">Confirmar</button>
+      </div>
+      <div id="error-msg" style="color: var(--danger); font-size: 0.85rem; margin-top: 12px; display: none;"></div>
+    </div>
+  `;
+  
+  document.body.appendChild(modal);
+  const input = modal.querySelector('#pwd-input');
+  const confirmBtn = modal.querySelector('#confirm-pwd');
+  const errorMsg = modal.querySelector('#error-msg');
+  
+  input.focus();
+  
+  function check(){
+    if(input.value === 'prof2026'){
+      document.getElementById(`answer-${index}`).classList.remove('hidden');
+      modal.remove();
+    } else {
+      errorMsg.textContent = '❌ Senha incorreta';
+      errorMsg.style.display = 'block';
+      input.value = '';
+      input.focus();
+    }
+  }
+  
+  confirmBtn.addEventListener('click', check);
+  input.addEventListener('keydown', e => {
+    if(e.key === 'Enter') check();
+  });
+  
+  modal.addEventListener('click', e => {
+    if(e.target === modal) modal.remove();
+  });
+}
+
+function hideAnswer(index){
+  document.getElementById(`answer-${index}`).classList.add('hidden');
+}
+
+function expandAllAnswers(show){
+  document.querySelectorAll('[id^="answer-"]').forEach(el => {
+    if(show){ el.classList.remove('hidden'); }
+    else{ el.classList.add('hidden'); }
+  });
+}
+
+function saveNote(id, value){
+  localStorage.setItem(id, value);
+  updateProgress();
+}
+
+function restoreNotes(){
+  CASES.forEach((_, index) => {
+    const id = `note-${index}`;
+    const field = document.getElementById(id);
+    const saved = localStorage.getItem(id);
+    if(saved) field.value = saved;
+    field.addEventListener('input', e => saveNote(id, e.target.value));
+  });
+}
+
+function clearNote(index){
+  const id = `note-${index}`;
+  const field = document.getElementById(id);
+  field.value = '';
+  localStorage.removeItem(id);
+  updateProgress();
+}
+
+function clearAllNotes(){
+  if(!confirm('Deseja apagar todas as anotações salvas neste dispositivo?')) return;
+  CASES.forEach((_, index) => {
+    localStorage.removeItem(`note-${index}`);
+    const el = document.getElementById(`note-${index}`);
+    if(el) el.value = '';
+  });
+  updateProgress();
+}
+
+function previewImage(event, index){
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const img = document.getElementById(`img-${index}`);
+    img.src = e.target.result;
+    img.style.display = 'block';
+    localStorage.setItem(`img-${index}`, e.target.result);
+  };
+  reader.readAsDataURL(file);
+}
+
+function restoreImages(){
+  CASES.forEach((_, index) => {
+    const saved = localStorage.getItem(`img-${index}`);
+    if(saved){
+      const img = document.getElementById(`img-${index}`);
+      img.src = saved;
+      img.style.display = 'block';
+    }
+  });
+}
+
+function updateProgress(){
+  const total = CASES.length;
+  const done = CASES.filter((_, index) => {
+    const note = localStorage.getItem(`note-${index}`);
+    return note && note.trim().length > 0;
+  }).length;
+  
+  document.getElementById('doneCount').textContent = done;
+  document.getElementById('progressBar').style.width = (done / total * 100) + '%';
+
+  const searchInput = document.getElementById('search');
+  const categorySelect = document.getElementById('category');
+
+  function filterCases() {
+    const query = searchInput.value.toLowerCase();
+    const category = categorySelect.value;
+    
+    document.querySelectorAll('.card').forEach(card => {
+      const search = card.dataset.search;
+      const cardCategory = card.dataset.category;
+      const matchesSearch = search.includes(query);
+      const matchesCategory = category === 'todos' || cardCategory === category;
+      card.style.display = matchesSearch && matchesCategory ? 'block' : 'none';
+    });
+  }
+
+  if (!searchInput.dataset.listener) {
+    searchInput.addEventListener('input', filterCases);
+    categorySelect.addEventListener('change', filterCases);
+    searchInput.dataset.listener = 'true';
+  }
+}
+
+renderCases();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e468b9a918602fc',t:'MTc3NDg2Nzc0Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+  </html>
